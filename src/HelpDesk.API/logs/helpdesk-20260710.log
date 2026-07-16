@@ -1,0 +1,57 @@
+2026-07-10 12:41:38.293 +03:30 [INF] HTTP GET / responded 404 in 171.6210 ms
+2026-07-10 13:07:27.257 +03:30 [INF] HTTP GET / responded 404 in 1.3532 ms
+2026-07-10 13:07:28.714 +03:30 [INF] HTTP GET / responded 404 in 1.8024 ms
+2026-07-10 13:07:40.975 +03:30 [INF] HTTP GET / responded 404 in 0.1417 ms
+2026-07-10 13:08:13.640 +03:30 [INF] HTTP GET / responded 404 in 0.1643 ms
+2026-07-10 13:08:23.282 +03:30 [INF] HTTP GET /swagger/index.html responded 200 in 71.3430 ms
+2026-07-10 13:08:23.334 +03:30 [INF] HTTP GET /swagger/index.js responded 200 in 35.4328 ms
+2026-07-10 13:08:23.465 +03:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 27.2782 ms
+2026-07-10 13:09:39.353 +03:30 [INF] HTTP GET /swagger/GET /api/notifications responded 404 in 0.3182 ms
+2026-07-10 13:09:42.387 +03:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 16.8569 ms
+2026-07-10 13:09:46.101 +03:30 [INF] HTTP GET /swagger/index.html/GET /api/notifications responded 404 in 0.2996 ms
+2026-07-10 13:09:48.972 +03:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 7.4208 ms
+2026-07-10 13:10:12.808 +03:30 [INF] HTTP GET /api/notifications responded 401 in 13.5864 ms
+2026-07-10 13:10:27.785 +03:30 [INF] HTTP GET /api/notifications responded 401 in 0.9389 ms
+2026-07-10 13:10:37.980 +03:30 [INF] HTTP GET /api/notifications responded 401 in 1.7351 ms
+2026-07-10 13:13:22.001 +03:30 [ERR] HTTP POST /api/auth/login responded 500 in 7575.2728 ms
+System.UnauthorizedAccessException: Invalid credentials
+   at HelpDesk.Application.Features.Auth.AuthHandlers.Handle(LoginCommand r, CancellationToken ct) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.Application\Features\Auth\AuthHandlers.cs:line 26
+   at HelpDesk.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken ct) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.Application\Common\Behaviors\ValidationBehavior.cs:line 18
+   at HelpDesk.API.Controllers.AuthController.Login(LoginRequest r) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.API\Controllers\AuthController.cs:line 38
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-07-10 13:13:22.063 +03:30 [ERR] An unhandled exception has occurred while executing the request.
+System.UnauthorizedAccessException: Invalid credentials
+   at HelpDesk.Application.Features.Auth.AuthHandlers.Handle(LoginCommand r, CancellationToken ct) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.Application\Features\Auth\AuthHandlers.cs:line 26
+   at HelpDesk.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken ct) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.Application\Common\Behaviors\ValidationBehavior.cs:line 18
+   at HelpDesk.API.Controllers.AuthController.Login(LoginRequest r) in C:\Users\alish\Desktop\helpdesk-export\helpdesk-backend\src\HelpDesk.API\Controllers\AuthController.cs:line 38
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2026-07-10 13:14:25.513 +03:30 [INF] HTTP POST /api/auth/login responded 400 in 64.8267 ms
+2026-07-10 13:15:53.854 +03:30 [INF] HTTP GET /api/notifications responded 401 in 0.2889 ms
+2026-07-10 13:40:21.406 +03:30 [INF] HTTP GET / responded 404 in 61.8096 ms

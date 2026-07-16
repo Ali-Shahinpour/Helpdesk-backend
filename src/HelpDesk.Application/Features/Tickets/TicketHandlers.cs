@@ -83,21 +83,43 @@ public class DeleteTicketHandler(IUnitOfWork uow) : IRequestHandler<DeleteTicket
 
 // ---------- Queries ----------
 public record GetTicketQuery(Guid Id) : IRequest<TicketDto>;
-public class GetTicketHandler(IUnitOfWork uow) : IRequestHandler<GetTicketQuery, TicketDto>
+public class GetTicketHandler(IUnitOfWork uow, ICurrentUser current) : IRequestHandler<GetTicketQuery, TicketDto>
 {
     public async Task<TicketDto> Handle(GetTicketQuery req, CancellationToken ct)
-        => (await uow.Tickets.GetByIdAsync(req.Id, ct) ?? throw new KeyNotFoundException()).ToDto();
+    {
+        var ticket = await uow.Tickets.GetByIdAsync(req.Id, ct) ?? throw new KeyNotFoundException();
+
+        // Customers may only access their own tickets. Everyone else (Admin/Manager/Agent)
+        // keeps existing full visibility.
+        if (current.Role == UserRole.Customer && ticket.CustomerId != current.Id)
+            throw new KeyNotFoundException();
+
+        return ticket.ToDto();
+    }
 }
 
 public record ListTicketsQuery(TicketStatus? Status, Guid? AssignedAgentId, Guid? CustomerId, string? Q) : IRequest<IReadOnlyList<TicketDto>>;
-public class ListTicketsHandler(IUnitOfWork uow) : IRequestHandler<ListTicketsQuery, IReadOnlyList<TicketDto>>
+public class ListTicketsHandler(IUnitOfWork uow, ICurrentUser current) : IRequestHandler<ListTicketsQuery, IReadOnlyList<TicketDto>>
 {
     public async Task<IReadOnlyList<TicketDto>> Handle(ListTicketsQuery req, CancellationToken ct)
     {
         var q = uow.Tickets.Query();
+
+        // Customers are hard-scoped to their own tickets regardless of any CustomerId
+        // filter they pass in, so they can't enumerate other customers' tickets.
+        // Admin/Manager/Agent behavior (including the optional CustomerId filter) is unchanged.
+        if (current.Role == UserRole.Customer)
+        {
+            var customerId = current.Id ?? throw new UnauthorizedAccessException();
+            q = q.Where(t => t.CustomerId == customerId);
+        }
+        else if (req.CustomerId is { } c)
+        {
+            q = q.Where(t => t.CustomerId == c);
+        }
+
         if (req.Status is { } s) q = q.Where(t => t.Status == s);
         if (req.AssignedAgentId is { } a) q = q.Where(t => t.AssignedAgentId == a);
-        if (req.CustomerId is { } c) q = q.Where(t => t.CustomerId == c);
         if (!string.IsNullOrWhiteSpace(req.Q))
         {
             var term = req.Q.Trim();

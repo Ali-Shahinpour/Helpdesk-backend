@@ -1,0 +1,5 @@
+2026-07-09 14:52:21.293 +03:30 [INF] HTTP GET / responded 404 in 84.0079 ms
+2026-07-09 14:52:26.912 +03:30 [INF] HTTP GET / responded 404 in 1.3183 ms
+2026-07-09 14:55:33.487 +03:30 [INF] HTTP GET /swagger/index.html responded 200 in 46.5200 ms
+2026-07-09 14:55:33.503 +03:30 [INF] HTTP GET /swagger/index.js responded 200 in 1.0265 ms
+2026-07-09 14:55:33.663 +03:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 30.4002 ms

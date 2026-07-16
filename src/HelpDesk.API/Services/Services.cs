@@ -21,11 +21,46 @@ public class CurrentUser(IHttpContextAccessor http) : ICurrentUser
 
 public class SignalRNotificationPublisher(IHubContext<Hubs.NotificationsHub> hub, IServiceProvider sp) : INotificationPublisher
 {
-    public Task TicketCreatedAsync(Ticket t, CancellationToken ct = default)
-        => hub.Clients.All.SendAsync("TicketCreated", new { t.Id, t.Number, t.Subject, t.CustomerId, t.AssignedAgentId, t.Status, t.Priority }, ct);
+    public async Task TicketCreatedAsync(Ticket t, CancellationToken ct = default)
+    {
+        await hub.Clients.All.SendAsync("TicketCreated", new { t.Id, t.Number, t.Subject, t.CustomerId, t.AssignedAgentId, t.Status, t.Priority }, ct);
 
-    public Task TicketUpdatedAsync(Ticket t, CancellationToken ct = default)
-        => hub.Clients.All.SendAsync("TicketUpdated", new { t.Id, t.Number, t.Status, t.Priority, t.AssignedAgentId }, ct);
+        // Notify Admins and Managers so they're aware a new ticket needs triage.
+        using var scope = sp.CreateScope();
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var recipients = await uow.Users.Query()
+            .Where(u => (u.Role == UserRole.Admin || u.Role == UserRole.Manager) && u.Id != t.CustomerId)
+            .Select(u => u.Id)
+            .ToListAsync(ct);
+        foreach (var userId in recipients)
+            await NotifyUserAsync(userId, "TicketCreated", $"New ticket {t.Number}", t.Subject, t.Id, ct);
+    }
+
+    public async Task TicketUpdatedAsync(Ticket t, CancellationToken ct = default)
+    {
+        await hub.Clients.All.SendAsync("TicketUpdated", new { t.Id, t.Number, t.Status, t.Priority, t.AssignedAgentId }, ct);
+
+        // t.Activities is loaded without eager-fetching existing rows (UpdateTicketHandler uses
+        // the plain GetByIdAsync), so at this point it only contains the ActivityEvent(s) added
+        // during this very update - i.e. exactly what changed just now. This lets us notify the
+        // right people without re-querying or duplicating the change-detection already done there.
+        foreach (var activity in t.Activities)
+        {
+            switch (activity.Type)
+            {
+                case ActivityType.Assigned:
+                    if (t.AssignedAgentId is { } agent && activity.ActorId != agent)
+                        await NotifyUserAsync(agent, "TicketAssigned", $"Ticket {t.Number} assigned to you", t.Subject, t.Id, ct);
+                    break;
+                case ActivityType.StatusChanged:
+                case ActivityType.Closed:
+                case ActivityType.Reopened:
+                    if (activity.ActorId != t.CustomerId)
+                        await NotifyUserAsync(t.CustomerId, "TicketStatusChanged", $"Ticket {t.Number} is now {t.Status}", t.Subject, t.Id, ct);
+                    break;
+            }
+        }
+    }
 
     public async Task TicketAssignedAsync(Ticket t, Guid? previousAgentId, CancellationToken ct = default)
     {

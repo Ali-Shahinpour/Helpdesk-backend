@@ -13,10 +13,16 @@ public record UploadAttachmentCommand(Guid TicketId, string FileName, long Size,
 public record DeleteAttachmentCommand(Guid Id) : IRequest<Unit>;
 public record GetAttachmentContentQuery(Guid Id) : IRequest<(byte[] Content, string ContentType, string FileName)?>;
 
-public class ListAttachmentsHandler(IUnitOfWork uow, IMapper map) : IRequestHandler<ListAttachmentsQuery, IReadOnlyList<AttachmentDto>>
+public class ListAttachmentsHandler(IUnitOfWork uow, IMapper map, ICurrentUser current) : IRequestHandler<ListAttachmentsQuery, IReadOnlyList<AttachmentDto>>
 {
     public async Task<IReadOnlyList<AttachmentDto>> Handle(ListAttachmentsQuery q, CancellationToken ct)
     {
+        var ticket = await uow.Tickets.GetByIdAsync(q.TicketId, ct) ?? throw new KeyNotFoundException();
+
+        // Customers may only list attachments on their own tickets. Admin/Manager/Agent unchanged.
+        if (current.Role == UserRole.Customer && ticket.CustomerId != current.Id)
+            throw new KeyNotFoundException();
+
         var list = await uow.Repo<Attachment>().Query().Where(a => a.TicketId == q.TicketId).OrderByDescending(a => a.CreatedAt).ToListAsync(ct);
         return map.Map<List<AttachmentDto>>(list);
     }
@@ -28,6 +34,12 @@ public class UploadAttachmentHandler(IUnitOfWork uow, ICurrentUser current, IMap
     public async Task<AttachmentDto> Handle(UploadAttachmentCommand c, CancellationToken ct)
     {
         var actor = current.Id ?? throw new UnauthorizedAccessException();
+
+        var ownerCheck = await uow.Tickets.GetByIdAsync(c.TicketId, ct) ?? throw new KeyNotFoundException();
+        // Customers may only upload attachments to their own tickets. Admin/Manager/Agent unchanged.
+        if (current.Role == UserRole.Customer && ownerCheck.CustomerId != actor)
+            throw new KeyNotFoundException();
+
         var path = await storage.SaveAsync(c.TicketId, c.FileName, c.Content, ct);
         var a = new Attachment {
             TicketId = c.TicketId, FileName = c.FileName, Size = c.Size,
@@ -53,12 +65,22 @@ public class DeleteAttachmentHandler(IUnitOfWork uow, IFileStorage storage) : IR
     }
 }
 
-public class GetAttachmentContentHandler(IUnitOfWork uow, IFileStorage storage) : IRequestHandler<GetAttachmentContentQuery, (byte[], string, string)?>
+public class GetAttachmentContentHandler(IUnitOfWork uow, IFileStorage storage, ICurrentUser current) : IRequestHandler<GetAttachmentContentQuery, (byte[], string, string)?>
 {
     public async Task<(byte[], string, string)?> Handle(GetAttachmentContentQuery q, CancellationToken ct)
     {
         var a = await uow.Repo<Attachment>().GetByIdAsync(q.Id, ct);
         if (a is null) return null;
+
+        // Customers may only download attachments on their own tickets. Admin/Manager/Agent unchanged.
+        // Returning null (-> 404 in the controller) rather than throwing, to match this handler's
+        // existing "not found" contract instead of an unhandled exception.
+        if (current.Role == UserRole.Customer)
+        {
+            var ticket = await uow.Tickets.GetByIdAsync(a.TicketId, ct);
+            if (ticket is null || ticket.CustomerId != current.Id) return null;
+        }
+
         var bytes = await storage.ReadAsync(a.StoragePath, ct);
         return (bytes, a.ContentType, a.FileName);
     }

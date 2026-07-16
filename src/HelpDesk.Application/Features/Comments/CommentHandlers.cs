@@ -12,10 +12,16 @@ namespace HelpDesk.Application.Features.Comments;
 public record ListCommentsQuery(Guid TicketId, bool IncludeInternal) : IRequest<IReadOnlyList<CommentDto>>;
 public record AddCommentCommand(Guid TicketId, string Body, bool IsInternal) : IRequest<CommentDto>;
 
-public class ListCommentsHandler(IUnitOfWork uow, IMapper map) : IRequestHandler<ListCommentsQuery, IReadOnlyList<CommentDto>>
+public class ListCommentsHandler(IUnitOfWork uow, IMapper map, ICurrentUser current) : IRequestHandler<ListCommentsQuery, IReadOnlyList<CommentDto>>
 {
     public async Task<IReadOnlyList<CommentDto>> Handle(ListCommentsQuery q, CancellationToken ct)
     {
+        var ticket = await uow.Tickets.GetByIdAsync(q.TicketId, ct) ?? throw new KeyNotFoundException();
+
+        // Customers may only read comments on their own tickets. Admin/Manager/Agent unchanged.
+        if (current.Role == UserRole.Customer && ticket.CustomerId != current.Id)
+            throw new KeyNotFoundException();
+
         var query = uow.Repo<Comment>().Query().Where(c => c.TicketId == q.TicketId);
         if (!q.IncludeInternal) query = query.Where(c => !c.IsInternal);
         var list = await query.OrderBy(c => c.CreatedAt).ToListAsync(ct);
@@ -30,6 +36,11 @@ public class AddCommentHandler(IUnitOfWork uow, ICurrentUser current, INotificat
     {
         var actor = current.Id ?? throw new UnauthorizedAccessException();
         var ticket = await uow.Tickets.GetByIdAsync(c.TicketId, ct) ?? throw new KeyNotFoundException();
+
+        // Customers may only comment on their own tickets. Admin/Manager/Agent unchanged.
+        if (current.Role == UserRole.Customer && ticket.CustomerId != actor)
+            throw new KeyNotFoundException();
+
         var comment = new Comment { TicketId = c.TicketId, AuthorId = actor, Body = c.Body, IsInternal = c.IsInternal };
         await uow.Repo<Comment>().AddAsync(comment, ct);
         ticket.Activities.Add(new ActivityEvent { TicketId = c.TicketId, ActorId = actor, Type = ActivityType.Commented });
